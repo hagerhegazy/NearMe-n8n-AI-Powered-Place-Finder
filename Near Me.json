@@ -1,0 +1,227 @@
+{
+  "name": "Near Me",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "near-me",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "014483a4-d1ac-4c64-ac10-aa63658cedf0",
+      "name": "Webhook",
+      "webhookId": "1517d215-0bde-47ae-89af-8aef21038abb"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a location search assistant.\n\nThe user wants to find places.\n\nConvert the user's request into JSON.\n\nReturn ONLY valid JSON.\nDo not use markdown.\nDo not add explanations.\n\nJSON format:\n\n{\n  \"searchQuery\": \"\",\n  \"count\": 5,\n  \"preference\": \"best\"\n}\n\nRules:\n\n- searchQuery must be a clear Google Places search query.\n- count must be between 1 and 10.\n- preference can be \"best\" or \"distance\".\n\nExamples:\n\nUser:\n5 restaurants in Dokki\n\nOutput:\n{\n  \"searchQuery\": \"restaurants in Dokki, Giza, Egypt\",\n  \"count\": 5,\n  \"preference\": \"best\"\n}\n\nUser:\n3 dentists in Giza\n\nOutput:\n{\n  \"searchQuery\": \"dentists in Giza, Egypt\",\n  \"count\": 3,\n  \"preference\": \"best\"\n}\n\nUser:\n5 closest coffee shops in Mohandessin\n\nOutput:\n{\n  \"searchQuery\": \"coffee shops in Mohandessin, Giza, Egypt\",\n  \"count\": 5,\n  \"preference\": \"distance\"\n}\n\nUser request:\n\n{{ $json.body.query }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ],
+      "id": "486ba762-5cf6-4fbe-acd5-68644f1c5596",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-5-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        192
+      ],
+      "id": "8bfb3121-23c2-4def-8281-8e35c3d8da6f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $json.text || $json.output || $json.response;\n\nlet data;\n\ntry {\n\n    data = JSON.parse(output);\n\n} catch (error) {\n\n    // Try to extract JSON if the model added extra text\n\n    const match =\n        output.match(/\\{[\\s\\S]*\\}/);\n\n    if (!match) {\n\n        throw new Error(\n            \"LLM did not return valid JSON\"\n        );\n\n    }\n\n    data = JSON.parse(match[0]);\n\n}\n\n\nreturn [\n\n    {\n        json: {\n\n            searchQuery: data.searchQuery,\n\n            count: Math.min(\n                Math.max(\n                    Number(data.count) || 5,\n                    1\n                ),\n                10\n            ),\n\n            preference:\n                data.preference === \"distance\"\n                ? \"distance\"\n                : \"best\"\n\n        }\n    }\n\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "10c6a629-f542-4736-9b80-67a8d701c1af",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Api-Key",
+              "value": "AIzaSyCUGmNQlOd2t2i-8f2V-3kcKt7bFOjqxAs"
+            },
+            {
+              "name": "X-Goog-FieldMask",
+              "value": "places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.location,places.nationalPhoneNumber,places.googleMapsUri"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "textQuery",
+              "value": "={{ $json.searchQuery }}"
+            },
+            {
+              "name": "maxResultCount",
+              "value": "={{ $json.count }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        800,
+        0
+      ],
+      "id": "9e375c42-3536-4ca3-a702-517822341faf",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "jsCode": "const places = $json.places || [];\n\nconst results = places.map(place => {\n\n    const location = place.location || {};\n\n    return {\n\n        name:\n            place.displayName?.text\n            || \"Unknown place\",\n\n        address:\n            place.formattedAddress\n            || \"Address unavailable\",\n\n        rating:\n            place.rating\n            || null,\n\n        reviews:\n            place.userRatingCount\n            || 0,\n\n        phone:\n            place.nationalPhoneNumber\n            || null,\n\n        lat:\n            location.latitude\n            || null,\n\n        lng:\n            location.longitude\n            || null,\n\n        mapsUrl:\n            place.googleMapsUri\n            || null\n\n    };\n\n});\n\n\nreturn [\n\n    {\n\n        json: {\n\n            results: results\n\n        }\n\n    }\n\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "29e64693-7c04-40c9-a351-6db85078c7bf",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1248,
+        0
+      ],
+      "id": "22096dba-0442-4bf2-a141-2cf9fbc4ee90",
+      "name": "Respond to Webhook"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "c9886755-cc9c-4609-aa86-8057d2c6ab79",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "39dca086bbb627083ae56159d6a262bc4fa27455c24bbc34b160a4255c73607a"
+  },
+  "nodeGroups": [],
+  "id": "9OBT3jA7mmSduLb0",
+  "tags": []
+}

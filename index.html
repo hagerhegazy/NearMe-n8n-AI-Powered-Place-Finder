@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NEARME — A Private Directory of Places</title>
+
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <!-- Navbar -->
+        <nav class="navbar">
+
+            <div class="brand">
+
+                <span class="logo-mark" aria-hidden="true">
+                    <svg viewBox="0 0 32 32" width="26" height="26">
+                        <path d="M16 2 L30 16 L16 16 Z" fill="#12A594" />
+                        <path d="M30 16 L16 30 L16 16 Z" fill="#FF6B6B" />
+                        <path d="M16 30 L2 16 L16 16 Z" fill="#12A594" />
+                        <path d="M2 16 L16 2 L16 16 Z" fill="#FFB627" />
+                    </svg>
+                </span>
+
+                <span class="mark">NEARME</span>
+
+            </div>
+
+            <ul class="nav-links">
+
+                <li><a href="#">Discover</a></li>
+
+                <li><a href="#">Saved</a></li>
+
+                <li><a href="#">Concierge</a></li>
+
+            </ul>
+
+        </nav>
+
+
+        <!-- Hero / Header -->
+        <header class="header">
+
+            <span class="locale">Cairo &amp; Giza</span>
+
+            <h1 class="tagline">
+                Tell us what you're looking for, and where —
+                <em>we'll handle the search.</em>
+            </h1>
+
+        </header>
+
+
+        <!-- Search -->
+        <section class="search-section">
+
+            <div class="search-box">
+
+                <label for="query">Your request</label>
+
+                <div class="search-row">
+
+                    <input
+                        id="query"
+                        type="text"
+                        placeholder="5 restaurants in Dokki"
+                    >
+
+                    <button id="searchBtn">
+                        Search
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="examples">
+
+                <span class="examples-label">Try</span>
+
+                <button onclick="useExample('5 restaurants in Dokki')">
+                    Restaurants
+                </button>
+
+                <button onclick="useExample('5 dentists in Giza')">
+                    Dentists
+                </button>
+
+                <button onclick="useExample('5 coffee shops in Mohandessin')">
+                    Coffee
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <!-- Loading -->
+        <div id="loading" class="loading">
+
+            <div class="spinner"></div>
+
+            <p>Consulting the directory…</p>
+
+        </div>
+
+
+        <!-- Main Content -->
+        <main class="content">
+
+            <!-- Results -->
+            <section class="results-panel">
+
+                <div class="section-title">
+
+                    <h2>Results</h2>
+
+                    <span id="resultCount"></span>
+
+                </div>
+
+                <div id="results"></div>
+
+            </section>
+
+
+            <!-- Map -->
+            <section class="map-panel">
+
+                <div class="section-title">
+
+                    <h2>Map</h2>
+
+                </div>
+
+                <div id="map"></div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+
+    <!-- Leaflet -->
+    <script
+        src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <script src="app.js"></script>
+
+</body>
+
+</html>
