@@ -24,7 +24,8 @@ The system understands that request and converts it into structured information.
 
 This is the most important thing to understand — how a plain sentence becomes real places on a map:
 
-```
+```    --publish mode--
+
              USER
                │
                ▼
@@ -91,22 +92,19 @@ This is the most important thing to understand — how a plain sentence becomes 
 ## Project structure
 
 ```
-.
-├── frontend/
+├── frontend/ (by help of AI)
 │   ├── index.html        # page markup
 │   ├── style.css         # styling
 │   ├── app.js             # search logic, map rendering
 │   └── favicon.svg        # logo / browser tab icon
 ├── workflow/
-│   └── nearme-workflow.json   # exported n8n workflow
+│   ├── nearme-workflow.json   # exported n8n workflow
+|   └── n8n-workflow.png        # workflow canvas
 └── screenshots/
-    ├── n8n-workflow.png        # workflow canvas
-    ├── ui.png                  # frontend UI
-    ├── input-example.png       # example search input
-    └── output-example.png      # example results output
+    ├── input-ui.png       # example search input
+    └── output-ui.png      # example results output
 ```
 
-*(Folder names above are a suggestion — adjust to match whatever you upload.)*
 
 ## Setup
 
@@ -115,17 +113,9 @@ Open `frontend/index.html` in a browser, or serve the folder with any static fil
 
 ### Workflow (n8n)
 1. Import `workflow/nearme-workflow.json` into your n8n instance.
-2. Add your **OpenAI API key** to the OpenAI Chat Model credential.
-3. Add your **Google Places API key** to the HTTP Request node (or as an environment variable / credential, depending on how the node is configured).
-4. Activate the workflow and copy its production webhook URL into `N8N_WEBHOOK_URL` in `frontend/app.js`.
+2. Add your **Google Places API key** to the HTTP Request node (or as an environment variable / credential, depending on how the node is configured).
+3. Activate the workflow and copy its production webhook URL into `N8N_WEBHOOK_URL` in `frontend/app.js`.
 
-## Screenshots
-
-_Add screenshots here once uploaded:_
-- Workflow canvas
-- Frontend UI
-- Example input
-- Example output
 
 ## Notes
 
